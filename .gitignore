@@ -1,0 +1,6 @@
+
+*.csv
+*.zip
+data/raw/91APP_DataSet_2022/91APP_BehaviorData/.DS_Store
+data/proc/SalePage.pkl
+data/proc/SalePage_Vec.pkl
