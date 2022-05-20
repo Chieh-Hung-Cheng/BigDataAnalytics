@@ -18,6 +18,8 @@ proc_pth = os.path.join(data_pth, 'proc')
 
 
 def flt_behav(save=True):
+    # 1st stage of filtering
+    # From raw data -> abbr
     years = ['2018', '2019', '2020', '2021', '2022']
     intrest_actions = ['viewproduct', 'search', 'add', 'checkout', 'purchase']
     intrest_colnames = ['MemberId', 'HitTime', 'Behavior', 'SalePageId', 'UnitPrice', 'Qty', 'TotalSalesAmount',\
@@ -38,6 +40,8 @@ def flt_behav(save=True):
                                 index=False)
 
 def flt_behav_crit(save=True):
+    # 2nd stage of filtering
+    # Abbr -> Crit
     years = ['2018', '2019', '2020', '2021', '2022']
     intrest_actions = ['search', 'add', 'checkout', 'purchase']
 
@@ -46,6 +50,10 @@ def flt_behav_crit(save=True):
         print(filename)
         df = pd.read_csv(os.path.join(proc_pth, 'BehaviorMembersAbbr', filename))
         df = df.loc[df['Behavior'].isin(intrest_actions)]
+        df = df.drop(df[(df['Behavior'] == 'search') & (df['SearchTerm'].isna())].index)
+        df = df.drop(df[(df['Behavior'] == 'add') & (df['SalePageId'].isna())].index)
+        df = df.drop(df[(df['Behavior'] == 'checkout') & (df['SalePageId'].isna())].index)
+        df = df.drop(df[(df['Behavior'] == 'purchase') & (df['SalePageId'].isna())].index)
         df_lst.append(df)
     df_full = pd.concat(df_lst)
     df_full.sort_values(['MemberId', 'HitTime', 'EventTime'], inplace=True)
@@ -68,9 +76,9 @@ def read_slave_csv():
     return pd.read_csv(os.path.join(dataset_pth, '91APP_OrderSlaveData.csv'))
 
 
-def read_page_csv(pth='raw'):
+def read_page(pth='raw', ver=''):
     if pth=='raw': return pd.read_csv(os.path.join(dataset_pth, '91APP_SalePageData.csv'))
-    elif pth=='proc': return pd.read_pickle(os.path.join(proc_pth, 'SalePage_Vec.pkl'))
+    elif pth=='proc': return pd.read_pickle(os.path.join(proc_pth, 'SalePage_Vec{}.pkl'.format(ver)))
 
 
 def trans_datetime(behav_df, save=False, filename='tmp'):
@@ -82,10 +90,11 @@ def trans_datetime(behav_df, save=False, filename='tmp'):
     return behav_df
 
 def sort_behv_session():
+    # Testing Session, DO NOT USE
     df = pd.read_csv(os.path.join(proc_pth, 'BehaviorMembersAbbr', 'BehaviorMembers_2022.csv'))
     df = df.loc[df['Behavior']!='viewproduct']
     df = trans_datetime(df)
-    pages = read_page_csv('proc')
+    pages = read_page('proc')
     df = pd.merge(df, pages, on='SalePageId', how='left')
 
     user_groups = df.groupby('MemberId')
@@ -98,12 +107,12 @@ def sort_behv_session():
 
 def doc_test():
     df = pd.read_pickle(os.path.join(proc_pth, 'BehaviorMembersCrit.pkl'))
-    pages = read_page_csv('proc')
+    pages = read_page('proc')
     df = pd.merge(df, pages, on='SalePageId', how='left')
     for memberid, histories in df.groupby('MemberId'):
         pass
 
 
 if __name__ == '__main__':
-    doc_test()
+    flt_behav_crit()
     pass
