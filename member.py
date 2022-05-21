@@ -41,8 +41,11 @@ def process_member_behaviors():
                         tmp_vec += model.wv[phr]
                     if np.linalg.norm(tmp_vec) != 0: member_vector += (tmp_vec/np.linalg.norm(tmp_vec)) * w
             else:
-                member_vector += history['Vector'] * w
+                if ~(np.isnan(history['Vector']).any()): member_vector += history['Vector'] * w
         if np.linalg.norm(member_vector) != 0: member_vector /= np.linalg.norm(member_vector)
+        if np.isnan(member_vector).any():
+            print(memberid)
+            print(histories)
         memberid_vector_dict[memberid] = member_vector
         pass
 

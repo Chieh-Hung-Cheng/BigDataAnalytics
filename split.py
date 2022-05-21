@@ -43,7 +43,7 @@ def split_sentence_to_phrase(sentence):
     else:
         for elm in short_sentences:
             slices += monpa.cut(elm)
-    slices_long_enough = [i.strip(' -') for i in slices if len(i.strip(' -')) >= 2 and not has_digit(i.strip())]
+    slices_long_enough = [i.strip(' -') for i in slices if len(i.strip(' -')) >= 2 and not has_digit(i.strip())] #perhaps digits are fine?
     return slices_long_enough
 
 
