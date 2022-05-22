@@ -35,17 +35,17 @@ def member_similarity_test():
 
 
 def item_similarity_test():
-    pages = doc_utils.read_page('proc', ver='05191557')
-    item_mtx = np.stack(pages.Vector)
+    shoes = pd.read_pickle(os.path.join(doc_utils.proc_pth, 'Shoes_Vec05211728.pkl'))
+    item_mtx = np.stack(shoes.Vector)
     sim_mtx = linear_kernel(item_mtx)
 
     sample = sim_mtx[800, :]
     sorted_index_array = np.argsort(sample)[::-1]
-    pages.iloc[sorted_index_array[0:100], :]
+    shoes.iloc[sorted_index_array[0:100], :]
     pass
 
 def wordvec_similarity_test():
-    model = word2vec.Word2Vec.load(os.path.join(doc_utils.proc_pth, 'word2vev05191557.model'))
+    model = word2vec.Word2Vec.load(os.path.join(doc_utils.proc_pth, 'word2vec05211728.model'))
     for idx in range(len(model.wv)):
         print('word: {}'.format(model.wv.index_to_key[idx]))
         print('Similar Top 10:{}'.format(model.wv.most_similar(model.wv.index_to_key[idx], 10)))
@@ -55,3 +55,4 @@ def wordvec_similarity_test():
 if __name__ == '__main__':
     # dict_to_df()
     item_similarity_test()
+    # wordvec_similarity_test()
