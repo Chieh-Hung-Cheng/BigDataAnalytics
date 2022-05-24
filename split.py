@@ -55,6 +55,8 @@ def process_sentence(x):
     x = x.strip()
     return x, size_info, color_info
 
+
+
 def ckip_split(sentence_lst):
     ws_results = ws(sentence_lst)
     return ws_results
@@ -154,7 +156,7 @@ def split_test():
 def split_with_color():
     pages = doc_utils.read_page()
     exclude_mask = pages['SalePageTitle'].str.contains(r'【.*】.*直播$', regex=True)
-    items = pages[~exclude_mask]
+    items = pages[~exclude_mask].copy()
 
     processed_lst = []
     size_lst = []
@@ -175,20 +177,37 @@ def split_with_color():
         if isinstance(row['ProcessedTitle'], str): sentence_lst.append(row['ProcessedTitle'])
         if isinstance(row['SizeInfo'], str): sentence_lst.append(row['SizeInfo'])
         splitted = ckip_split(sentence_lst)
+
+        if row['SizeInfo'] is not None: splitted = splitted[0] + splitted[1]
+        else: splitted = splitted[0]
         split_phrases.append(splitted)
-        slices_long_enough = [i.strip(' -') for i in splitted[0] if len(i.strip(' -')) >= 2 and not has_word(i.strip())]
-        if row['ColorInfo'] is not None: slices_long_enough += [row['ColorInfo']]
+
+        slices_long_enough = [i.strip(' -') for i in splitted if len(i.strip(' -')) >= 2 and not has_word(i.strip())]
+        if row['ColorInfo'] is not None: slices_long_enough += [row['ColorInfo'].strip()]
         long_enough.append(slices_long_enough)
         pass
     items['SplitPhrases'] = split_phrases
     items['LongEnough'] = long_enough
+    items.to_pickle(os.path.join(doc_utils.proc_pth, 'items.pkl'))
     pass
 
+def get_phrase_set():
+    items = pd.read_pickle(os.path.join(doc_utils.proc_pth, 'items.pkl'))
+    phrases_series = items['LongEnough']
+    phr_set = set()
 
+    for phrases_lst in tqdm(items['LongEnough']):
+        for phr in phrases_lst:
+            phr_set.add(phr)
+    phrases = pd.Series(list(phr_set)).to_frame('Phrase')
+    phrases.to_pickle(doc_utils.proc_pth, 'phrases.pkl')
+    pass
 
+def clear_emoji(x):
+    x = re.sub(r'[^\u4e00-\u9fa5 | \w | \' | \:| % |\.]+', ' ', x)
+    return x
 
 if __name__ == '__main__':
-    split_with_color()
-    # gen_word2vec_model()
-    # add_vector_for_items()
+    pages = doc_utils.read_page()
+    pages['Dict'] = np.zeros(len(pages))
     pass
